@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      layout:decorate="~{layout}"
+      layout:fragment="content">
+<head>
+    <title>Cadastro - VPN Manager</title>
+</head>
+<body>
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4 class="mb-0">Criar Nova Conta</h4>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/register}" method="post" class="needs-validation" novalidate th:object="${userForm}">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label for="fullName" class="form-label">Nome Completo</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+                                    <input type="text" class="form-control" id="fullName" th:field="*{fullName}" required>
+                                    <div class="invalid-feedback">
+                                        Por favor, informe seu nome completo.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">E-mail</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                    <input type="email" class="form-control" id="email" th:field="*{email}" required>
+                                    <div class="invalid-feedback">
+                                        Por favor, informe um e-mail válido.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label for="username" class="form-label">Nome de Usuário</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                    <input type="text" class="form-control" id="username" th:field="*{username}" required>
+                                    <div class="invalid-feedback">
+                                        Por favor, escolha um nome de usuário.
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted">Mínimo 4 caracteres, apenas letras e números.</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="phone" class="form-label">Telefone</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                    <input type="tel" class="form-control" id="phone" th:field="*{phone}" required>
+                                    <div class="invalid-feedback">
+                                        Por favor, informe um número de telefone válido.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label for="password" class="form-label">Senha</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                    <input type="password" class="form-control" id="password" th:field="*{password}" required>
+                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <div class="invalid-feedback">
+                                        A senha deve conter pelo menos 8 caracteres, incluindo letras maiúsculas, minúsculas e números.
+                                    </div>
+                                </div>
+                                <div class="form-text">Mínimo 8 caracteres, incluindo letras e números.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="confirmPassword" class="form-label">Confirmar Senha</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                                    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <div class="invalid-feedback">
+                                        As senhas não coincidem.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="terms" required>
+                            <label class="form-check-label" for="terms">
+                                Eu li e concordo com os <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Termos de Uso</a> e <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">Política de Privacidade</a>.
+                            </label>
+                            <div class="invalid-feedback">
+                                Você deve concordar com os termos para se cadastrar.
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-person-plus me-2"></i>Criar Conta
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="mt-3 text-center">
+                        <p class="mb-0">Já tem uma conta? <a th:href="@{/login}" class="text-decoration-none">Faça login aqui</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Terms Modal -->
+    <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="termsModalLabel">Termos de Uso</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>1. Aceitação dos Termos</h6>
+                    <p>Ao acessar e usar o VPN Manager, você concorda em cumprir estes Termos de Uso e nossa Política de Privacidade.</p>
+                    
+                    <h6>2. Uso do Serviço</h6>
+                    <p>O serviço VPN deve ser utilizado apenas para fins legais. O uso indevido pode resultar no cancelamento imediato da conta.</p>
+                    
+                    <h6>3. Responsabilidades</h6>
+                    <p>Você é responsável por manter a confidencialidade de suas credenciais de acesso e por todas as atividades que ocorram em sua conta.</p>
+                    
+                    <h6>4. Modificações</h6>
+                    <p>Reservamo-nos o direito de modificar estes termos a qualquer momento. As alterações entrarão em vigor após a publicação.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Privacy Modal -->
+    <div class="modal fade" id="privacyModal" tabindex="-1" aria-labelledby="privacyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="privacyModalLabel">Política de Privacidade</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>1. Coleta de Dados</h6>
+                    <p>Coletamos apenas as informações necessárias para fornecer e melhorar nosso serviço, como nome, e-mail e dados de uso.</p>
+                    
+                    <h6>2. Uso dos Dados</h6>
+                    <p>Seus dados são utilizados para autenticação, suporte ao cliente, melhorias no serviço e comunicações importantes.</p>
+                    
+                    <h6>3. Compartilhamento</h6>
+                    <p>Não vendemos nem compartilhamos seus dados pessoais com terceiros, exceto conforme necessário para fornecer o serviço ou por exigência legal.</p>
+                    
+                    <h6>4. Segurança</h6>
+                    <p>Implementamos medidas de segurança para proteger seus dados contra acesso não autorizado ou divulgação.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <th:block layout:fragment="scripts">
+        <script th:inline="javascript">
+            // Enable form validation
+            (function() {
+                'use strict';
+                
+                // Fetch all the forms we want to apply custom Bootstrap validation styles to
+                var forms = document.querySelectorAll('.needs-validation');
+                var password = document.getElementById('password');
+                var confirmPassword = document.getElementById('confirmPassword');
+                
+                // Password validation function
+                function validatePassword() {
+                    if (password.value !== confirmPassword.value) {
+                        confirmPassword.setCustomValidity('As senhas não coincidem');
+                    } else {
+                        confirmPassword.setCustomValidity('');
+                    }
+                    
+                    // Check password strength
+                    if (password.value.length < 8) {
+                        password.setCustomValidity('A senha deve ter pelo menos 8 caracteres');
+                    } else if (!/[A-Z]/.test(password.value)) {
+                        password.setCustomValidity('A senha deve conter pelo menos uma letra maiúscula');
+                    } else if (!/[a-z]/.test(password.value)) {
+                        password.setCustomValidity('A senha deve conter pelo menos uma letra minúscula');
+                    } else if (!/[0-9]/.test(password.value)) {
+                        password.setCustomValidity('A senha deve conter pelo menos um número');
+                    } else {
+                        password.setCustomValidity('');
+                    }
+                }
+                
+                // Add event listeners
+                password.onchange = validatePassword;
+                confirmPassword.onkeyup = validatePassword;
+                
+                // Loop over forms and prevent submission
+                Array.prototype.slice.call(forms).forEach(function(form) {
+                    form.addEventListener('submit', function(event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+                
+                // Toggle password visibility
+                function setupPasswordToggle(buttonId, inputId) {
+                    const toggleButton = document.querySelector(buttonId);
+                    const passwordInput = document.querySelector(inputId);
+                    
+                    if (toggleButton && passwordInput) {
+                        toggleButton.addEventListener('click', function() {
+                            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                            passwordInput.setAttribute('type', type);
+                            this.querySelector('i').classList.toggle('bi-eye');
+                            this.querySelector('i').classList.toggle('bi-eye-slash');
+                        });
+                    }
+                }
+                
+                // Setup password toggles
+                setupPasswordToggle('#togglePassword', '#password');
+                setupPasswordToggle('#toggleConfirmPassword', '#confirmPassword');
+                
+                // Format phone number
+                const phoneInput = document.getElementById('phone');
+                if (phoneInput) {
+                    phoneInput.addEventListener('input', function(e) {
+                        let value = e.target.value.replace(/\D/g, '');
+                        if (value.length > 2) {
+                            value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
+                        }
+                        if (value.length > 10) {
+                            value = `${value.substring(0, 10)}-${value.substring(10, 15)}`;
+                        }
+                        e.target.value = value;
+                    });
+                }
+            })();
+        </script>
+    </th:block>
+</body>
+</html>

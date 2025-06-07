@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <footer th:fragment="footer" class="footer mt-auto py-4 bg-dark text-white-50">
+        <div class="container-fluid">
+            <div class="row g-4">
+                <!-- Sobre -->
+                <div class="col-lg-4 col-md-6">
+                    <h5 class="text-white mb-3">
+                        <i class="bi bi-shield-lock me-2"></i> Painel VPN
+                    </h5>
+                    <p class="small">
+                        Solução completa para gerenciamento de certificados e usuários VPN.
+                        Segurança e facilidade em um único lugar.
+                    </p>
+                    <div class="social-links mt-3">
+                        <a href="#" class="text-white me-2" data-bs-toggle="tooltip" title="GitHub">
+                            <i class="bi bi-github fs-5"></i>
+                        </a>
+                        <a href="#" class="text-white me-2" data-bs-toggle="tooltip" title="Documentação">
+                            <i class="bi bi-book fs-5"></i>
+                        </a>
+                        <a href="#" class="text-white" data-bs-toggle="tooltip" title="Suporte">
+                            <i class="bi bi-headset fs-5"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Links Rápidos -->
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="text-white mb-3">Links Rápidos</h6>
+                    <ul class="nav flex-column">
+                        <li class="nav-item mb-2">
+                            <a href="#" class="nav-link p-0 text-muted">Início</a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a href="#" class="nav-link p-0 text-muted">Documentação</a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a href="#" class="nav-link p-0 text-muted">Preços</a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a href="#" class="nav-link p-0 text-muted">FAQ</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Contato -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="text-white mb-3">Contato</h6>
+                    <ul class="nav flex-column">
+                        <li class="nav-item mb-2">
+                            <i class="bi bi-envelope me-2"></i>
+                            <span class="text-muted">suporte@vpnmanager.com</span>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <i class="bi bi-telephone me-2"></i>
+                            <span class="text-muted">+55 (11) 99999-9999</span>
+                        </li>
+                        <li class="nav-item">
+                            <i class="bi bi-geo-alt me-2"></i>
+                            <span class="text-muted">São Paulo, SP - Brasil</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Newsletter -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="text-white mb-3">Newsletter</h6>
+                    <p class="small text-muted">Inscreva-se para receber atualizações.</p>
+                    <form class="mb-3">
+                        <div class="input-group">
+                            <input type="email" class="form-control form-control-sm" placeholder="seu@email.com">
+                            <button class="btn btn-primary btn-sm" type="button">
+                                <i class="bi bi-send"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <hr class="mt-4 mb-3">
+
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+                    <span class="small">
+                        &copy; 2025 Painel VPN. Todos os direitos reservados.
+                    </span>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <span class="small me-3">Versão 1.0.0</span>
+                    <span class="small">
+                        <a href="#" class="text-muted me-2">Termos</a>
+                        <a href="#" class="text-muted">Privacidade</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

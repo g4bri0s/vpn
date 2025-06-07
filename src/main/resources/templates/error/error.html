@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Erro</title>
+</head>
+<body>
+    <section class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8 text-center">
+                <div class="error-template">
+                    <h1>Oops!</h1>
+                    <h2 th:text="${status} + ' ' + ${error}">Erro</h2>
+                    <div class="error-details mt-3">
+                        <p th:if="${message}" th:text="${message}">Ocorreu um erro inesperado.</p>
+                        <p th:unless="${message}">Ocorreu um erro inesperado.</p>
+                    </div>
+                    <div class="error-actions mt-4">
+                        <a th:href="@{/}" class="btn btn-primary btn-lg me-2">
+                            <i class="fas fa-home"></i> Página Inicial
+                        </a>
+                        <a href="javascript:history.back()" class="btn btn-outline-secondary btn-lg">
+                            <i class="fas fa-arrow-left"></i> Voltar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+</html>

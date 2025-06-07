@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout}"
+      layout:fragment="content">
+<head>
+    <title>Gerar Certificado - VPN Manager</title>
+</head>
+<body>
+    <div layout:fragment="page-title">
+        <i class="bi bi-file-earmark-lock me-2"></i>Gerar Novo Certificado
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Informações do Certificado</h5>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/certificates/generate}" th:object="${certificateForm}" method="post" class="needs-validation" novalidate>
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label for="user" class="form-label">Usuário</label>
+                                <select class="form-select" id="user" th:field="*{userId}" required>
+                                    <option value="" disabled selected>Selecione um usuário</option>
+                                    <option th:each="user : ${users}" 
+                                            th:value="${user.id}" 
+                                            th:text="${user.name + ' (' + user.email + ')'}">
+                                    </option>
+                                </select>
+                                <div class="invalid-feedback">
+                                    Por favor, selecione um usuário.
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="name" class="form-label">Nome do Dispositivo</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-pc-display"></i></span>
+                                    <input type="text" class="form-control" id="name" th:field="*{name}" 
+                                           placeholder="Ex: Notebook Pessoal, Celular, etc." required>
+                                    <div class="invalid-feedback">
+                                        Por favor, informe um nome para o dispositivo.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label for="validity" class="form-label">Validade</label>
+                                <select class="form-select" id="validity" th:field="*{validityDays}" required>
+                                    <option value="30">30 dias</option>
+                                    <option value="90">90 dias</option>
+                                    <option value="180">180 dias</option>
+                                    <option value="365">1 ano</option>
+                                    <option value="730">2 anos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="type" class="form-label">Tipo de Certificado</label>
+                                <select class="form-select" id="type" th:field="*{type}" required>
+                                    <option value="CLIENT">Cliente</option>
+                                    <option value="SERVER">Servidor</option>
+                                    <option value="PEER" disabled>Peer (Em breve)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="sendEmail" th:field="*{sendEmail}">
+                                <label class="form-check-label" for="sendEmail">
+                                    Enviar instruções por e-mail
+                                </label>
+                                <div class="form-text">
+                                    Envia um e-mail para o usuário com instruções de instalação.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4" th:classappend="*{sendEmail} ? '' : 'd-none'" id="emailOptions">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">Opções de E-mail</h6>
+                                    <div class="mb-3">
+                                        <label for="email" class="form-label">E-mail de Destino</label>
+                                        <input type="email" class="form-control" id="email" th:field="*{email}">
+                                        <div class="form-text">Deixe em branco para usar o e-mail padrão do usuário.</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="message" class="form-label">Mensagem Adicional (opcional)</label>
+                                        <textarea class="form-control" id="message" th:field="*{message}" rows="3" 
+                                                  placeholder="Adicione uma mensagem personalizada ao e-mail."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a th:href="@{/dashboard}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-file-earmark-lock me-2"></i>Gerar Certificado
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Instruções de Uso</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Após a geração, o certificado estará disponível para download imediatamente.
+                    </div>
+                    
+                    <h6>Requisitos:</h6>
+                    <ul>
+                        <li>OpenVPN Client instalado no dispositivo</li>
+                        <li>Arquivo de configuração (.ovpn)</li>
+                        <li>Arquivo de certificado (.crt)</li>
+                        <li>Arquivo de chave privada (.key)</li>
+                    </ul>
+                    
+                    <div class="accordion" id="installationGuide">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="windowsGuide">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#windowsCollapse" aria-expanded="false" aria-controls="windowsCollapse">
+                                    <i class="bi bi-windows me-2"></i>Windows
+                                </button>
+                            </h2>
+                            <div id="windowsCollapse" class="accordion-collapse collapse" aria-labelledby="windowsGuide" data-bs-parent="#installationGuide">
+                                <div class="accordion-body">
+                                    <ol>
+                                        <li>Baixe e instale o <a href="https://openvpn.net/community-downloads/" target="_blank">OpenVPN Client para Windows</a></li>
+                                        <li>Faça o download dos arquivos de configuração</li>
+                                        <li>Copie os arquivos para a pasta <code>C:\\Program Files\\OpenVPN\\config</code></li>
+                                        <li>Clique com o botão direito no ícone do OpenVPN na bandeja do sistema</li>
+                                        <li>Selecione o perfil e clique em "Connect"</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="macosGuide">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#macosCollapse" aria-expanded="false" aria-controls="macosCollapse">
+                                    <i class="bi bi-apple me-2"></i>macOS
+                                </button>
+                            </h2>
+                            <div id="macosCollapse" class="accordion-collapse collapse" aria-labelledby="macosGuide" data-bs-parent="#installationGuide">
+                                <div class="accordion-body">
+                                    <ol>
+                                        <li>Instale o OpenVPN via Homebrew: <code>brew install --cask openvpn-connect</code></li>
+                                        <li>Baixe os arquivos de configuração</li>
+                                        <li>Abra o aplicativo OpenVPN Connect</li>
+                                        <li>Clique em "File" > "Import Profile..."</li>
+                                        <li>Selecione o arquivo .ovpn e clique em "Import"</li>
+                                        <li>Clique em "Connect" para estabelecer a conexão</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="linuxGuide">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#linuxCollapse" aria-expanded="false" aria-controls="linuxCollapse">
+                                    <i class="bi bi-ubuntu me-2"></i>Linux
+                                </button>
+                            </h2>
+                            <div id="linuxCollapse" class="accordion-collapse collapse" aria-labelledby="linuxGuide" data-bs-parent="#installationGuide">
+                                <div class="accordion-body">
+                                    <ol>
+                                        <li>Instale o OpenVPN: <code>sudo apt install openvpn</code> (Debian/Ubuntu) ou <code>sudo dnf install openvpn</code> (Fedora)</li>
+                                        <li>Baixe os arquivos de configuração</li>
+                                        <li>Mova os arquivos para <code>/etc/openvpn/client/</code></li>
+                                        <li>Conecte usando: <code>sudo openvpn --config /etc/openvpn/client/config.ovpn</code></li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <th:block layout:fragment="scripts">
+        <script th:inline="javascript">
+            document.addEventListener('DOMContentLoaded', function() {
+                // Toggle email options
+                const sendEmailCheckbox = document.getElementById('sendEmail');
+                const emailOptions = document.getElementById('emailOptions');
+                
+                if (sendEmailCheckbox && emailOptions) {
+                    sendEmailCheckbox.addEventListener('change', function() {
+                        if (this.checked) {
+                            emailOptions.classList.remove('d-none');
+                        } else {
+                            emailOptions.classList.add('d-none');
+                        }
+                    });
+                }
+                
+                // Form validation
+                (function () {
+                    'use strict'
+                    
+                    // Fetch all the forms we want to apply custom Bootstrap validation styles to
+                    var forms = document.querySelectorAll('.needs-validation')
+                    
+                    // Loop over them and prevent submission
+                    Array.prototype.slice.call(forms)
+                        .forEach(function (form) {
+                            form.addEventListener('submit', function (event) {
+                                if (!form.checkValidity()) {
+                                    event.preventDefault()
+                                    event.stopPropagation()
+                                }
+                                
+                                form.classList.add('was-validated')
+                            }, false)
+                        })
+                })()
+            });
+        </script>
+    </th:block>
+</body>
+</html>
