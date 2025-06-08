@@ -1,0 +1,9 @@
+/* layout.css - estilos globais compartilhados */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+}
+footer {
+  background-color: #343a40; /* bg-dark */
+  color: #ced4da; /* text-white-50 */
+}

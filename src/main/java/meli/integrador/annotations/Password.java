@@ -5,7 +5,8 @@ import meli.integrador.common.PasswordValidator;
 import java.lang.annotation.*;
 import jakarta.validation.Constraint;
 
-@Target({ElementType.METHOD, ElementType.FIELD, ElementType.ANNOTATION_TYPE, ElementType.CONSTRUCTOR, ElementType.PARAMETER, ElementType.TYPE_USE})
+@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.ANNOTATION_TYPE, ElementType.CONSTRUCTOR,
+        ElementType.PARAMETER, ElementType.TYPE_USE })
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = PasswordValidator.class)
 @Documented
@@ -16,7 +17,8 @@ public @interface Password {
 
     Class<? extends Payload>[] payload() default {};
 
-    @Target({ElementType.METHOD, ElementType.FIELD, ElementType.ANNOTATION_TYPE, ElementType.CONSTRUCTOR, ElementType.PARAMETER, ElementType.TYPE_USE})
+    @Target({ ElementType.METHOD, ElementType.FIELD, ElementType.ANNOTATION_TYPE, ElementType.CONSTRUCTOR,
+            ElementType.PARAMETER, ElementType.TYPE_USE })
     @Retention(RetentionPolicy.RUNTIME)
     @Documented
     public @interface List {

@@ -188,13 +188,13 @@ public class CertificateService {
                         "Usuário não encontrado para o identificador de certificado VPN: " + vpnCertId));
 
         try {
-            executeCertificateScript(vpnCertId, "generate"); // Assuming renewal is a re-generation
+            executeCertificateScript(vpnCertId, "generate");
 
-            LocalDateTime issueDate = LocalDateTime.now(); // Renewal implies new issue date
+            LocalDateTime issueDate = LocalDateTime.now();
             LocalDateTime expiryDate = issueDate.plusDays(validityDays != null ? validityDays : 7);
 
             user.setCertificateExpiry(expiryDate);
-            user.setVpnEnabled(true); // Ensure VPN is enabled on renewal
+            user.setVpnEnabled(true);
             userRepository.save(user);
 
             log.info("Certificado renovado para o identificador VPN: {}, Novo vencimento: {}", vpnCertId, expiryDate);
@@ -226,9 +226,8 @@ public class CertificateService {
             executeCertificateScript(vpnCertId, "revoke");
 
             user.setVpnEnabled(false);
-            user.setCertificateExpiry(LocalDateTime.now().minusSeconds(1)); // Mark as expired
-            // user.setVpnCertificateIdentifier(null); // Optional: decide if identifier
-            // should be cleared or kept for history
+            user.setCertificateExpiry(LocalDateTime.now().minusSeconds(1));
+
             userRepository.save(user);
 
             log.info("Certificado {} revogado com sucesso para o usuário {}.", vpnCertId, user.getUsername());
@@ -241,35 +240,6 @@ public class CertificateService {
             log.error("Erro ao revogar certificado {}: {}", vpnCertId, e.getMessage(), e);
             throw e;
         }
-    }
-
-    public CertificateResponse getCertificateDetails(String vpnCertId) throws UserNotFoundException {
-        validateVpnCertificateIdentifier(vpnCertId);
-
-        User user = userRepository.findByVpnCertificateIdentifier(vpnCertId)
-                .orElseThrow(() -> new UserNotFoundException(
-                        "Usuário não encontrado para o identificador de certificado VPN: " + vpnCertId));
-
-        // TODO: Potentially read actual certificate file for more details if needed in
-        // future
-        // For now, details are from the User entity
-        return CertificateResponse.builder()
-                .certificateId(vpnCertId)
-                .userId(String.valueOf(user.getId()))
-                .commonName(user.getUsername())
-                .issueDate(user.getCreatedAt()) // This might not be the cert issue date. User.certificateIssueDate
-                                                // could be a new field.
-                                                // For now, using user creation or last update as a proxy is not ideal.
-                                                // Let's assume certificateId is generated, so User.updatedAt might be
-                                                // closer if cert is recent
-                                                // Or, if we store issue date on User, use that. For now, using
-                                                // User.getUpdatedAt() or a fixed past date.
-                .issueDate(user.getCertificateExpiry() != null ? user.getCertificateExpiry().minusDays(7)
-                        : user.getUpdatedAt()) // Placeholder logic for issue date
-                .expiryDate(user.getCertificateExpiry())
-                .status(user.isVpnEnabled() && user.getCertificateExpiry() != null
-                        && user.getCertificateExpiry().isAfter(LocalDateTime.now()) ? "ATIVO" : "INATIVO/EXPIRADO")
-                .build();
     }
 
     public CertificateResponse.DownloadFile downloadConfigFile(String vpnCertId)
@@ -302,32 +272,6 @@ public class CertificateService {
         }
     }
 
-    public CertificateResponse.ValidityResponse validateCertificate(String vpnCertId) throws UserNotFoundException {
-        validateVpnCertificateIdentifier(vpnCertId);
-
-        // First, check if the user for this certificate ID exists and is enabled
-        User user = userRepository.findByVpnCertificateIdentifier(vpnCertId)
-                .orElseThrow(() -> new UserNotFoundException(
-                        "Usuário não encontrado para o identificador de certificado VPN: " + vpnCertId));
-
-        LocalDateTime now = LocalDateTime.now();
-        boolean isValid = user.isVpnEnabled() && user.getCertificateExpiry() != null
-                && user.getCertificateExpiry().isAfter(now);
-        String status = isValid ? "VALID" : "INVALID/EXPIRED";
-        String message = isValid ? "Válido até " + user.getCertificateExpiry()
-                : "Certificado inválido, expirado ou revogado.";
-
-        return CertificateResponse.ValidityResponse.builder()
-                .valid(isValid)
-                .status(status)
-                .message(message)
-                .validUntil(user.getCertificateExpiry())
-                .checkedAt(now)
-                .certificateId(vpnCertId)
-                .commonName(user.getUsername()) // Common Name in cert is usually the vpnCertId itself
-                .build();
-    }
-
     public List<CertificateResponse> listUserCertificates(String userUuid) throws UserNotFoundException {
         validateUserUuid(userUuid);
 
@@ -341,7 +285,7 @@ public class CertificateService {
                     .userId(String.valueOf(user.getId()))
                     .commonName(user.getUsername())
                     .issueDate(user.getCertificateExpiry() != null ? user.getCertificateExpiry().minusDays(7)
-                            : user.getUpdatedAt()) // Placeholder
+                            : user.getUpdatedAt())
                     .expiryDate(user.getCertificateExpiry())
                     .status(user.getCertificateExpiry() != null
                             && user.getCertificateExpiry().isAfter(LocalDateTime.now()) ? "ATIVO" : "EXPIRADO")
@@ -357,144 +301,11 @@ public class CertificateService {
         if (vpnCertId == null || userUuid == null)
             return false;
         return userRepository.findByVpnCertificateIdentifier(vpnCertId)
-                .map(user -> user.getId().equals(UUID.fromString(userUuid))) // Convert String to UUID
+                .map(user -> user.getId().equals(UUID.fromString(userUuid)))
                 .orElse(false);
-    }
-
-    public CertificateResponse.DownloadFile generateCrl() throws CertificateGenerationException {
-        // This method's logic for script execution is independent of the User model
-        // details
-        try {
-            executeCertificateScript("ignored_param_for_crl", "generate_crl"); // Script might not need a client name
-                                                                               // for CRL
-            log.info("Gerando CRL...");
-            // Actual CRL file path needs to be determined based on OpenVPN/easyrsa setup
-            // e.g., /etc/openvpn/easy-rsa/pki/crl.pem
-            Path crlPath = Paths.get(certificatesDirectory, "../easy-rsa/pki/crl.pem"); // Example path, adjust as
-                                                                                        // needed
-            // Forcing a fixed path for now as an example. This should be configurable or
-            // discovered.
-            crlPath = Paths.get(scriptPath).getParent().resolve("easy-rsa/pki/crl.pem"); // Assuming script is in
-                                                                                         // /etc/openvpn/scripts and
-                                                                                         // easy-rsa is sibling
-            if (!Files.exists(crlPath)) {
-                // Fallback or more robust discovery needed. For now, let's assume it's in a
-                // known relative path to script or certs dir.
-                // This is a common location, but highly dependent on specific easy-rsa setup.
-                // Defaulting to a placeholder if not found, to avoid breaking. Production code
-                // needs robust path discovery.
-                log.warn("CRL file not found at expected path: {}. Returning placeholder.", crlPath);
-                byte[] crlContentPlaceholder = "Conteúdo do CRL (placeholder) - arquivo não encontrado".getBytes();
-                return CertificateResponse.DownloadFile.builder()
-                        .filename("crl.pem")
-                        .resource(new ByteArrayResource(crlContentPlaceholder))
-                        .contentType("application/x-pem-file")
-                        .size(crlContentPlaceholder.length)
-                        .build();
-            }
-
-            byte[] crlContent = Files.readAllBytes(crlPath);
-            return CertificateResponse.DownloadFile.builder()
-                    .filename("crl.pem")
-                    .resource(new ByteArrayResource(crlContent))
-                    .contentType("application/x-pem-file")
-                    .size(crlContent.length)
-                    .build();
-        } catch (Exception e) {
-            log.error("Erro ao gerar CRL: {}", e.getMessage(), e);
-            throw new CertificateGenerationException("Falha ao gerar CRL: " + e.getMessage(), e);
-        }
-    }
-
-    public List<CertificateResponse> listCertificatesExpiringSoon(int days) {
-        if (days <= 0) {
-            throw new IllegalArgumentException("Days must be positive.");
-        }
-        LocalDateTime soon = LocalDateTime.now().plusDays(days);
-        List<CertificateResponse> responses = new ArrayList<>();
-        userRepository.findUsersWithCertificatesExpiringSoon(soon).forEach(user -> {
-            responses.add(CertificateResponse.builder()
-                    .certificateId(user.getVpnCertificateIdentifier())
-                    .userId(String.valueOf(user.getId()))
-                    .commonName(user.getUsername())
-                    .issueDate(user.getCertificateExpiry() != null ? user.getCertificateExpiry().minusDays(7) : null) // Placeholder
-                    .expiryDate(user.getCertificateExpiry())
-                    .status("EXPIRANDO EM BREVE")
-                    .build());
-        });
-        return responses;
-    }
-
-    public Iterable<CertificateResponse> listExpiredCertificates() {
-        List<CertificateResponse> responses = new ArrayList<>();
-        userRepository.findAll().forEach(user -> {
-            if (user.getVpnCertificateIdentifier() != null && user.getCertificateExpiry() != null
-                    && user.getCertificateExpiry().isBefore(LocalDateTime.now())) {
-                responses.add(CertificateResponse.builder()
-                        .certificateId(user.getVpnCertificateIdentifier())
-                        .userId(String.valueOf(user.getId()))
-                        .commonName(user.getUsername())
-                        .issueDate(user.getCertificateExpiry().minusDays(7)) // Placeholder
-                        .expiryDate(user.getCertificateExpiry())
-                        .status("EXPIRADO")
-                        .build());
-            }
-        });
-        return responses;
-    }
-
-    public Iterable<CertificateResponse> listRevokedCertificates() {
-        // This would ideally check a CRL or a specific 'revoked' status in the DB.
-        // For now, considering users with vpnEnabled=false and a
-        // vpnCertificateIdentifier as potentially revoked.
-        List<CertificateResponse> responses = new ArrayList<>();
-        userRepository.findAll().forEach(user -> {
-            if (user.getVpnCertificateIdentifier() != null && !user.isVpnEnabled()
-                    && user.getCertificateExpiry() != null) {
-                // And expiry is in the past due to revokeCertificate logic setting it to
-                // now()-1sec
-                if (user.getCertificateExpiry().isBefore(LocalDateTime.now())) {
-                    responses.add(CertificateResponse.builder()
-                            .certificateId(user.getVpnCertificateIdentifier())
-                            .userId(String.valueOf(user.getId()))
-                            .commonName(user.getUsername())
-                            .issueDate(user.getCertificateExpiry().minusDays(7)) // Placeholder
-                            .expiryDate(user.getCertificateExpiry())
-                            .status("REVOGADO")
-                            .build());
-                }
-            }
-        });
-        return responses;
-    }
-
-    public CertificateResponse.CertificateStats getCertificateStats() {
-        long totalUsersWithCerts = userRepository.countByVpnCertificateIdentifierIsNotNull();
-        long activeCerts = userRepository.countByVpnEnabledTrueAndCertificateExpiryAfter(LocalDateTime.now());
-        long expiredCerts = userRepository.countByVpnEnabledTrueAndCertificateExpiryBefore(LocalDateTime.now());
-        // Revoked is harder to count precisely without a dedicated status or CRL
-        // parsing.
-        // Approximating as users with certs but VPN disabled and cert expiry in past.
-        long revokedCertsApprox = userRepository
-                .countByVpnCertificateIdentifierIsNotNullAndVpnEnabledFalseAndCertificateExpiryBefore(
-                        LocalDateTime.now());
-        long expiringSoonCount = userRepository.countByVpnEnabledTrueAndCertificateExpiryBetween(LocalDateTime.now(),
-                LocalDateTime.now().plusDays(7)); // Default 7 days for soon
-
-        return CertificateResponse.CertificateStats.builder()
-                .totalCertificates((int) totalUsersWithCerts)
-                .activeCertificates((int) activeCerts)
-                .expiredCertificates((int) expiredCerts)
-                .revokedCertificates((int) revokedCertsApprox)
-                .expiringSoonCount((int) expiringSoonCount)
-                .generatedAt(LocalDateTime.now())
-                .build();
     }
 
     private void executeCertificateScript(String clientNameOrId, String action)
             throws IOException, InterruptedException, CertificateGenerationException {
-        // This method remains largely the same, as its parameters clientNameOrId and
-        // action are generic.
-        // Implementation not shown for brevity.
     }
 }

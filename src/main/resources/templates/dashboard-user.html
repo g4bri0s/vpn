@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Área do Funcionário - Configurações VPN</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <style>
+    body {
+      background: #f8f9fa;
+      padding-top: 70px;
+    }
+    .sortable:hover {
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .sort-asc {
+      color: red;
+    }
+    .sort-desc {
+      color: red;
+    }
+    .progress-bar-animated {
+      animation: progress-bar-stripes 1s linear infinite;
+    }
+    /* Animação da barra de progresso */
+    @keyframes progress-bar-stripes {
+      from { background-position: 1rem 0; }
+      to { background-position: 0 0; }
+    }
+    .popup-backdrop {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1050;
+    }
+    .popup {
+      background: white;
+      width: 80vw;
+      max-height: 80vh;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-y: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      position: relative;
+    }
+    .popup-close {
+      position: absolute;
+      top: 10px; right: 10px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      border: none;
+      background: none;
+    }
+    .filter-input {
+      max-width: 300px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Menu simplificado -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top shadow-sm">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#"><i class="bi bi-shield-lock me-2"></i>Painel VPN</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="#">Dashboard</a></li>
+      </ul>
+      <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link" href="#">Usuário</a></li>
+        <li class="nav-item"><a class="nav-link" href="#">Sair</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+  <div class="d-flex justify-content-between align-items-center my-4">
+    <h2>Configurações VPN Criadas</h2>
+    <button class="btn btn-success" id="btnNovo">Novo</button>
+  </div>
+
+  <div class="d-flex justify-content-end mb-2 gap-2">
+    <input type="text" id="filterIdentificador" class="form-control filter-input" placeholder="Filtrar por identificador" />
+    <input type="date" id="filterData" class="form-control filter-input" />
+  </div>
+
+  <table class="table table-striped table-hover">
+    <thead>
+      <tr>
+        <th><input type="checkbox" id="selectAll" /></th>
+        <th class="sortable" data-column="identificador">Identificador <i class="bi bi-caret-up-fill d-none"></i><i class="bi bi-caret-down-fill d-none"></i></th>
+        <th class="sortable" data-column="dataCriacao">Data de Criação <i class="bi bi-caret-up-fill d-none"></i><i class="bi bi-caret-down-fill d-none"></i></th>
+        <th class="sortable" data-column="validade">Validade (dias) <i class="bi bi-caret-up-fill d-none"></i><i class="bi bi-caret-down-fill d-none"></i></th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody">
+      <!-- Linhas geradas pelo JS -->
+    </tbody>
+  </table>
+
+  <div class="my-3">
+    <button class="btn btn-danger" id="btnRemoverSelecionados">Remover Selecionados</button>
+  </div>
+
+  <!-- Barra de progresso animada (oculta por padrão) -->
+  <div class="progress my-3 d-none" id="progressBarContainer">
+    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+  </div>
+
+</div>
+
+<!-- Popup confirmação remoção -->
+<div class="popup-backdrop" id="popupBackdrop">
+  <div class="popup">
+    <button class="popup-close" id="popupClose">&times;</button>
+    <h4 id="popupTitle">Confirmação</h4>
+    <div id="popupContent"></div>
+  </div>
+</div>
+
+<!-- Bootstrap JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // Dados simulados (normalmente vem do backend)
+  let configuracoes = [
+    { identificador: 'C0F9KLS', dataCriacao: '2025-06-01', validade: 7 },
+    { identificador: 'UT9WU01', dataCriacao: '2025-06-03', validade: 7 },
+    { identificador: 'X7P2Q9M', dataCriacao: '2025-05-28', validade: 7 },
+  ];
+
+  let filteredConfigs = [...configuracoes];
+  let currentSort = { column: 'identificador', direction: 'asc' };
+
+  const tableBody = document.getElementById('tableBody');
+  const filterIdentificador = document.getElementById('filterIdentificador');
+  const filterData = document.getElementById('filterData');
+  const selectAllCheckbox = document.getElementById('selectAll');
+  const btnRemoverSelecionados = document.getElementById('btnRemoverSelecionados');
+  const btnNovo = document.getElementById('btnNovo');
+  const popupBackdrop = document.getElementById('popupBackdrop');
+  const popupClose = document.getElementById('popupClose');
+  const popupTitle = document.getElementById('popupTitle');
+  const popupContent = document.getElementById('popupContent');
+  const progressBarContainer = document.getElementById('progressBarContainer');
+
+  // Renderiza tabela
+  function renderTable() {
+    tableBody.innerHTML = '';
+    filteredConfigs.forEach(cfg => {
+      const tr = document.createElement('tr');
+      const validadeRestante = calcularValidadeRestante(cfg.dataCriacao, cfg.validade);
+      tr.innerHTML = `
+        <td><input type="checkbox" class="row-checkbox" data-id="${cfg.identificador}"></td>
+        <td>${cfg.identificador}</td>
+        <td>${cfg.dataCriacao}</td>
+        <td>${validadeRestante} dias</td>
+        <td>
+          <button class="btn btn-sm btn-primary btn-download" data-id="${cfg.identificador}" title="Download">
+            <i class="bi bi-download"></i>
+          </button>
+        </td>
+      `;
+      tableBody.appendChild(tr);
+    });
+    updateSelectAllCheckbox();
+  }
+
+  // Calcula validade restante em dias
+  function calcularValidadeRestante(dataCriacao, validadeDias) {
+    const criacao = new Date(dataCriacao);
+    const hoje = new Date();
+    const diffMs = (criacao.getTime() + validadeDias*24*60*60*1000) - hoje.getTime();
+    const diffDias = Math.ceil(diffMs / (1000*60*60*24));
+    return diffDias > 0 ? diffDias : 0;
+  }
+
+  // Ordenação
+  function sortTable(column) {
+    if (currentSort.column === column) {
+      currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+      currentSort.column = column;
+      currentSort.direction = 'asc';
+    }
+    filteredConfigs.sort((a,b) => {
+      let valA = a[column];
+      let valB = b[column];
+      if(column === 'dataCriacao') {
+        valA = new Date(valA);
+        valB = new Date(valB);
+      }
+      if(valA < valB) return currentSort.direction === 'asc' ? -1 : 1;
+      if(valA > valB) return currentSort.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+    updateSortIcons();
+    renderTable();
+  }
+
+  // Atualiza ícones e cores da ordenação
+  function updateSortIcons() {
+    document.querySelectorAll('th.sortable').forEach(th => {
+      const iconUp = th.querySelector('.bi-caret-up-fill');
+      const iconDown = th.querySelector('.bi-caret-down-fill');
+      if(th.dataset.column === currentSort.column) {
+        if(currentSort.direction === 'asc') {
+          iconUp.classList.remove('d-none');
+          iconDown.classList.add('d-none');
+          th.classList.add('sort-asc');
+          th.classList.remove('sort-desc');
+        } else {
+          iconDown.classList.remove('d-none');
+          iconUp.classList.add('d-none');
+          th.classList.add('sort-desc');
+          th.classList.remove('sort-asc');
+        }
+        th.style.color = 'red';
+      } else {
+        iconUp.classList.add('d-none');
+        iconDown.classList.add('d-none');
+        th.classList.remove('sort-asc', 'sort-desc');
+        th.style.color = 'black';
+      }
+    });
+  }
+
+  // Filtros - aplicam ao pressionar Enter
+  filterIdentificador.addEventListener('keydown', e => {
+    if(e.key === 'Enter') applyFilters();
+  });
+  filterData.addEventListener('keydown', e => {
+    if(e.key === 'Enter') applyFilters();
+  });
+
+  function applyFilters() {
+    const filtroId = filterIdentificador.value.trim().toLowerCase();
+    const filtroData = filterData.value;
+    filteredConfigs = configuracoes.filter(cfg => {
+      const matchId = filtroId === '' || cfg.identificador.toLowerCase().includes(filtroId);
+      const matchData = filtroData === '' || cfg.dataCriacao === filtroData;
+      return matchId && matchData;
+    });
+    renderTable();
+  }
+
+  // Selecionar/desselecionar todos
+  selectAllCheckbox.addEventListener('change', () => {
+    const checkboxes = document.querySelectorAll('.row-checkbox');
+    checkboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
+  });
+
+  // Atualiza checkbox "select all"
+  function updateSelectAllCheckbox() {
+    const checkboxes = document.querySelectorAll('.row-checkbox');
+    const checked = document.querySelectorAll('.row-checkbox:checked');
+    selectAllCheckbox.checked = checkboxes.length > 0 && checked.length === checkboxes.length;
+  }
+
+  // Atualiza select all ao clicar checkbox linha
+  tableBody.addEventListener('change', e => {
+    if(e.target.classList.contains('row-checkbox')) {
+      updateSelectAllCheckbox();
+    }
+  });
+
+  // Botão remover selecionados
+  btnRemoverSelecionados.addEventListener('click', () => {
+    const selecionados = Array.from(document.querySelectorAll('.row-checkbox:checked'))
+      .map(cb => cb.dataset.id);
+    if(selecionados.length === 0) {
+      alert('Selecione ao menos um arquivo para remover.');
+      return;
+    }
+    abrirPopupConfirmacaoRemocao(selecionados);
+  });
+
+  // Popup confirmação remoção
+  function abrirPopupConfirmacaoRemocao(ids) {
+    popupTitle.textContent = 'Confirmação de Remoção';
+    popupContent.innerHTML = `
+      <p>Você realmente deseja excluir os arquivos <strong>${ids.join(', ')}</strong>?</p>
+      <div class="d-flex justify-content-end gap-2">
+        <button class="btn btn-success" id="btnNao">Não</button>
+        <button class="btn btn-danger" id="btnSim">Sim</button>
+      </div>
+    `;
+    popupBackdrop.style.display = 'flex';
+
+    document.getElementById('btnNao').onclick = () => popupBackdrop.style.display = 'none';
+    document.getElementById('btnSim').onclick = () => {
+      popupBackdrop.style.display = 'none';
+      removerArquivos(ids);
+    };
+  }
+
+  // Função para remover arquivos (chamar backend)
+  function removerArquivos(ids) {
+    // Exibe barra de progresso animada
+    progressBarContainer.classList.remove('d-none');
+
+    // Simulação de chamada ao backend com delay
+    setTimeout(() => {
+      // Aqui você chamaria a API para revogar e remover arquivos
+      configuracoes = configuracoes.filter(cfg => !ids.includes(cfg.identificador));
+      filteredConfigs = filteredConfigs.filter(cfg => !ids.includes(cfg.identificador));
+      renderTable();
+      progressBarContainer.classList.add('d-none');
+      alert('Arquivos removidos com sucesso!');
+    }, 2000);
+  }
+
+  // Botão Novo - cria nova configuração
+  btnNovo.addEventListener('click', () => {
+    progressBarContainer.classList.remove('d-none');
+
+    // Simula chamada ao backend para criar arquivos e gerar zip
+    setTimeout(() => {
+      const novoId = gerarIdentificadorUnico();
+      const hoje = new Date().toISOString().slice(0,10);
+      configuracoes.push({
+        identificador: novoId,
+        dataCriacao: hoje,
+        validade: 7
+      });
+      filteredConfigs = [...configuracoes];
+      renderTable();
+      progressBarContainer.classList.add('d-none');
+      alert(`Nova configuração criada com identificador: ${novoId}`);
+    }, 3000);
+  });
+
+  // Gera identificador único alfanumérico de 7 caracteres
+  function gerarIdentificadorUnico() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let id;
+    do {
+      id = '';
+      for(let i=0; i<7; i++) {
+        id += chars.charAt(Math.floor(Math.random()*chars.length));
+      }
+    } while(configuracoes.some(cfg => cfg.identificador === id));
+    return id;
+  }
+
+  // Download seguro do arquivo zip
+  tableBody.addEventListener('click', e => {
+    if(e.target.closest('.btn-download')) {
+      const id = e.target.closest('.btn-download').dataset.id;
+      baixarArquivo(id);
+    }
+  });
+
+  function baixarArquivo(id) {
+    // Requisição fetch para backend que retorna o arquivo zip como octet-stream
+    fetch(`/api/v1/vpn/config/download/${id}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': localStorage.getItem('jwtToken') || '',
+      }
+    })
+    .then(response => {
+      if(!response.ok) throw new Error('Erro ao baixar o arquivo.');
+      return response.blob();
+    })
+    .then(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${id}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    })
+    .catch(err => alert(err.message));
+  }
+
+  popupClose.onclick = () => {
+    popupBackdrop.style.display = 'none';
+  };
+
+  // Ordenação inicial
+  sortTable('identificador');
+</script>
+
+</body>
+</html>

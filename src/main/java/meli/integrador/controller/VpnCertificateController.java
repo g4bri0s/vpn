@@ -69,17 +69,6 @@ public class VpnCertificateController {
     }
 
     /**
-     * Obtém os detalhes de um certificado
-     */
-    @GetMapping("/{certificateId}")
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('USER') and @certificateService.isCertificateOwner(#certificateId, authentication.principal.id))")
-    @Operation(summary = "Obtém os detalhes de um certificado", security = @SecurityRequirement(name = "bearerAuth"))
-    public CertificateResponse getCertificate(@PathVariable String certificateId)
-            throws UserNotFoundException {
-        return certificateService.getCertificateDetails(certificateId);
-    }
-
-    /**
      * Faz o download do arquivo de configuração OpenVPN para um certificado
      */
     @GetMapping("/{certificateId}/download")
@@ -94,15 +83,6 @@ public class VpnCertificateController {
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename=\"" + file.getFilename() + "\"")
                 .body(file.getResource());
-    }
-
-    /**
-     * Verifica se um certificado é válido
-     */
-    @GetMapping("/{certificateId}/validate")
-    @Operation(summary = "Verifica se um certificado é válido")
-    public CertificateResponse.ValidityResponse validateCertificate(@PathVariable String certificateId) {
-        return certificateService.validateCertificate(certificateId);
     }
 
     /**

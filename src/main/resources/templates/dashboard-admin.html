@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard Administrativo - Painel VPN</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <style>
+    body {
+      background: #f8f9fa;
+      padding-top: 70px;
+    }
+    .sortable:hover {
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .sort-asc {
+      color: red;
+    }
+    .sort-desc {
+      color: red;
+    }
+    .popup-backdrop {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1050;
+    }
+    .popup {
+      background: white;
+      width: 80vw;
+      height: 80vh;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-y: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      position: relative;
+    }
+    .popup-close {
+      position: absolute;
+      top: 10px; right: 10px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      border: none;
+      background: none;
+    }
+    .filter-input {
+      max-width: 300px;
+    }
+  </style>
+</head>
+
+<!-- Popup Cadastro de Funcionário -->
+<div class="popup-backdrop" id="popupCadastroFuncionario" style="display:none; justify-content:center; align-items:center; position:fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.5); z-index:1050;">
+  <div class="popup" style="background:white; width:80vw; max-width:600px; padding:20px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.3); position:relative;">
+    <button class="popup-close" id="btnFecharPopupCadastro" style="position:absolute; top:10px; right:10px; font-size:1.5rem; cursor:pointer; border:none; background:none;">&times;</button>
+    <h4>Cadastrar Novo Funcionário</h4>
+    <form id="formCadastroFuncionario" novalidate>
+      <div class="mb-3">
+        <label for="nomeFuncionario" class="form-label">Nome</label>
+        <input type="text" id="nomeFuncionario" class="form-control" required />
+        <div class="error-message text-danger small mt-1" id="errorNome"></div>
+      </div>
+      <div class="mb-3">
+        <label for="emailFuncionario" class="form-label">Email Corporativo</label>
+        <input type="email" id="emailFuncionario" class="form-control" placeholder="exemplo@yopmail.com" required />
+        <div class="error-message text-danger small mt-1" id="errorEmail"></div>
+      </div>
+      <div class="form-check mb-3">
+        <input type="checkbox" class="form-check-input" id="administradorFuncionario" />
+        <label class="form-check-label" for="administradorFuncionario">É Administrador</label>
+      </div>
+      <button type="submit" class="btn btn-primary">Cadastrar</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Função para abrir popup
+  function abrirPopupCadastro() {
+    document.getElementById('popupCadastroFuncionario').style.display = 'flex';
+    limparErrosCadastro();
+    document.getElementById('formCadastroFuncionario').reset();
+  }
+
+  // Função para fechar popup
+  document.getElementById('btnFecharPopupCadastro').addEventListener('click', () => {
+    document.getElementById('popupCadastroFuncionario').style.display = 'none';
+  });
+
+  // Limpa mensagens de erro
+  function limparErrosCadastro() {
+    document.getElementById('errorNome').textContent = '';
+    document.getElementById('errorEmail').textContent = '';
+  }
+
+  // Validação simples de email corporativo (exemplo com domínio yopmail.com)
+  function validarEmailCorporativo(email) {
+    return email.toLowerCase().endsWith('@yopmail.com');
+  }
+
+  // Evento submit do formulário
+  document.getElementById('formCadastroFuncionario').addEventListener('submit', function(e) {
+    e.preventDefault();
+    limparErrosCadastro();
+
+    const nome = document.getElementById('nomeFuncionario').value.trim();
+    const email = document.getElementById('emailFuncionario').value.trim();
+    const isAdmin = document.getElementById('administradorFuncionario').checked;
+
+    let valido = true;
+
+    if (!nome) {
+      document.getElementById('errorNome').textContent = 'Por favor informe Nome.';
+      valido = false;
+    }
+    if (!email) {
+      document.getElementById('errorEmail').textContent = 'Por favor informe Email Corporativo.';
+      valido = false;
+    } else if (!validarEmailCorporativo(email)) {
+      document.getElementById('errorEmail').textContent = 'Por favor informe um email corporativo válido.';
+      valido = false;
+    }
+
+    if (!valido) return;
+
+    // Aqui você deve chamar sua API para salvar o funcionário no backend,
+    // por exemplo via fetch POST, e após sucesso atualizar a lista no dashboard.
+
+    // Exemplo simulado:
+    alert(`Funcionário cadastrado:\nNome: ${nome}\nEmail: ${email}\nAdministrador: ${isAdmin ? 'Sim' : 'Não'}`);
+
+    // Fechar popup após cadastro
+    document.getElementById('popupCadastroFuncionario').style.display = 'none';
+
+    // TODO: Atualizar a lista de funcionários no dashboard
+    // ex: atualizarTabelaFuncionarios();
+  });
+</script>
+
+<body>
+
+<!-- Menu -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top shadow-sm">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#"><i class="bi bi-shield-lock me-2"></i>Painel VPN</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="#">Dashboard</a></li>
+      </ul>
+      <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link" href="#">Usuário</a></li>
+        <li class="nav-item"><a class="nav-link" href="#">Sair</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+  <div class="d-flex justify-content-between align-items-center my-4">
+    <h2>Funcionários e Administradores</h2>
+    <button class="btn btn-success" id="btnAddFuncionario">+ Adicionar Funcionário</button>
+  </div>
+
+  <div class="d-flex justify-content-end mb-2">
+    <input type="text" id="filterInput" class="form-control filter-input" placeholder="Buscar por nome..." />
+  </div>
+
+  <table class="table table-striped table-hover">
+    <thead>
+      <tr>
+        <th><input type="checkbox" id="selectAll" /></th>
+        <th class="sortable" data-column="nome">Nome <i class="bi bi-caret-up-fill d-none"></i><i class="bi bi-caret-down-fill d-none"></i></th>
+        <th class="sortable" data-column="email">Email <i class="bi bi-caret-up-fill d-none"></i><i class="bi bi-caret-down-fill d-none"></i></th>
+        <th class="sortable" data-column="cargo">Cargo <i class="bi bi-caret-up-fill d-none"></i><i class="bi bi-caret-down-fill d-none"></i></th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody">
+      <!-- Linhas serão geradas por JS -->
+    </tbody>
+  </table>
+
+  <div class="my-3">
+    <select id="actionSelect" class="form-select w-auto d-inline-block">
+      <option value="">Ações para selecionados</option>
+      <option value="elegerAdmin">Eleger Administrador</option>
+      <option value="revogarAdmin">Revogar Administrador</option>
+      <option value="ativarAcesso">Ativar Acesso</option>
+      <option value="revogarAcesso">Revogar Acesso</option>
+      <option value="removerCadastro">Remover Cadastro</option>
+    </select>
+    <button class="btn btn-primary ms-2" id="btnExecuteAction">Executar</button>
+  </div>
+
+</div>
+
+<!-- Popup -->
+<div class="popup-backdrop" id="popupBackdrop">
+  <div class="popup">
+    <button class="popup-close" id="popupClose">&times;</button>
+    <h4 id="popupTitle">Título</h4>
+    <div id="popupContent">
+      <!-- Conteúdo dinâmico -->
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // Dados fictícios para exemplo
+  const funcionarios = [
+    {id:1, nome:"Ana Silva", email:"ana.silva@empresa.com", cargo:"Funcionário", ativo:true, admin:false},
+    {id:2, nome:"Bruno Costa", email:"bruno.costa@empresa.com", cargo:"Administrador", ativo:true, admin:true},
+    {id:3, nome:"Carlos Souza", email:"carlos.souza@empresa.com", cargo:"Funcionário", ativo:false, admin:false},
+    {id:4, nome:"Daniela Lima", email:"daniela.lima@empresa.com", cargo:"Funcionário", ativo:true, admin:false},
+    {id:5, nome:"Eduardo Pereira", email:"eduardo.pereira@empresa.com", cargo:"Administrador", ativo:true, admin:true}
+  ];
+
+  let currentSort = { column: 'nome', direction: 'asc' };
+  let filteredFuncionarios = [...funcionarios];
+
+  const tableBody = document.getElementById('tableBody');
+  const filterInput = document.getElementById('filterInput');
+  const selectAllCheckbox = document.getElementById('selectAll');
+  const actionSelect = document.getElementById('actionSelect');
+  const btnExecuteAction = document.getElementById('btnExecuteAction');
+  const popupBackdrop = document.getElementById('popupBackdrop');
+  const popupClose = document.getElementById('popupClose');
+  const popupTitle = document.getElementById('popupTitle');
+  const popupContent = document.getElementById('popupContent');
+  const btnAddFuncionario = document.getElementById('btnAddFuncionario');
+
+  // Renderiza tabela
+  function renderTable() {
+    tableBody.innerHTML = '';
+    filteredFuncionarios.forEach(f => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input type="checkbox" class="row-checkbox" data-id="${f.id}"></td>
+        <td>${f.nome}</td>
+        <td>${f.email}</td>
+        <td>${f.admin ? '<span class="badge bg-danger">Administrador</span>' : 'Funcionário'}</td>
+        <td>${f.ativo ? '<span class="badge bg-success">Ativo</span>' : '<span class="badge bg-secondary">Inativo</span>'}</td>
+      `;
+      tableBody.appendChild(tr);
+    });
+    updateSelectAllCheckbox();
+  }
+
+  // Ordenação
+  function sortTable(column) {
+    if (currentSort.column === column) {
+      currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+      currentSort.column = column;
+      currentSort.direction = 'asc';
+    }
+    filteredFuncionarios.sort((a,b) => {
+      let valA = a[column].toString().toLowerCase();
+      let valB = b[column].toString().toLowerCase();
+      if(valA < valB) return currentSort.direction === 'asc' ? -1 : 1;
+      if(valA > valB) return currentSort.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+    updateSortIcons();
+    renderTable();
+  }
+
+  // Atualiza ícones e cores da ordenação
+  function updateSortIcons() {
+    document.querySelectorAll('th.sortable').forEach(th => {
+      const iconUp = th.querySelector('.bi-caret-up-fill');
+      const iconDown = th.querySelector('.bi-caret-down-fill');
+      if(th.dataset.column === currentSort.column) {
+        if(currentSort.direction === 'asc') {
+          iconUp.classList.remove('d-none');
+          iconDown.classList.add('d-none');
+          th.classList.add('sort-asc');
+          th.classList.remove('sort-desc');
+        } else {
+          iconDown.classList.remove('d-none');
+          iconUp.classList.add('d-none');
+          th.classList.add('sort-desc');
+          th.classList.remove('sort-asc');
+        }
+        th.style.color = 'red';
+      } else {
+        iconUp.classList.add('d-none');
+        iconDown.classList.add('d-none');
+        th.classList.remove('sort-asc', 'sort-desc');
+        th.style.color = 'black';
+      }
+    });
+  }
+
+  // Filtrar tabela
+  filterInput.addEventListener('keydown', e => {
+    if(e.key === 'Enter') {
+      const term = filterInput.value.trim().toLowerCase();
+      filteredFuncionarios = funcionarios.filter(f => f.nome.toLowerCase().includes(term));
+      renderTable();
+    }
+  });
+
+  // Selecionar/desselecionar todos
+  selectAllCheckbox.addEventListener('change', () => {
+    const checkboxes = document.querySelectorAll('.row-checkbox');
+    checkboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
+  });
+
+  // Atualiza checkbox "select all" conforme seleção
+  function updateSelectAllCheckbox() {
+    const checkboxes = document.querySelectorAll('.row-checkbox');
+    const checked = document.querySelectorAll('.row-checkbox:checked');
+    selectAllCheckbox.checked = checkboxes.length > 0 && checked.length === checkboxes.length;
+  }
+
+  // Atualiza select all ao clicar checkbox linha
+  tableBody.addEventListener('change', e => {
+    if(e.target.classList.contains('row-checkbox')) {
+      updateSelectAllCheckbox();
+    }
+  });
+
+  // Executar ação selecionada no menu
+  btnExecuteAction.addEventListener('click', () => {
+    const action = actionSelect.value;
+    if(!action) {
+      alert('Selecione uma ação para executar.');
+      return;
+    }
+    const selectedIds = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => parseInt(cb.dataset.id));
+    if(selectedIds.length === 0) {
+      alert('Selecione ao menos um funcionário.');
+      return;
+    }
+    openPopup(action, selectedIds);
+  });
+
+  // Abrir popup com conteúdo dinâmico conforme ação
+  function openPopup(action, ids) {
+    popupTitle.textContent = {
+      elegerAdmin: 'Eleger Administrador',
+      revogarAdmin: 'Revogar Administrador',
+      ativarAcesso: 'Ativar Acesso',
+      revogarAcesso: 'Revogar Acesso',
+      removerCadastro: 'Remover Cadastro'
+    }[action] || 'Ação';
+
+    popupContent.innerHTML = `
+      <p>Confirma a ação <strong>${popupTitle.textContent}</strong> para <strong>${ids.length}</strong> funcionário(s)?</p>
+      <div class="d-flex justify-content-end">
+        <button class="btn btn-secondary me-2" id="btnCancel">Cancelar</button>
+        <button class="btn btn-danger" id="btnConfirm">Confirmar</button>
+      </div>
+    `;
+
+    popupBackdrop.style.display = 'flex';
+
+    document.getElementById('btnCancel').onclick = () => popupBackdrop.style.display = 'none';
+    document.getElementById('btnConfirm').onclick = () => {
+      // Aqui você implementaria a chamada ao backend para executar a ação
+      alert(`Ação "${popupTitle.textContent}" executada para IDs: ${ids.join(', ')}`);
+      popupBackdrop.style.display = 'none';
+      // Atualize a tabela conforme necessário
+    };
+  }
+
+  popupClose.onclick = () => {
+    popupBackdrop.style.display = 'none';
+  };
+
+  btnAddFuncionario.onclick = () => {
+    popupTitle.textContent = 'Adicionar Novo Funcionário';
+    popupContent.innerHTML = `
+      <form id="formAddFuncionario">
+        <div class="mb-3">
+          <label for="nomeFuncionario" class="form-label">Nome</label>
+          <input type="text" class="form-control" id="nomeFuncionario" required>
+        </div>
+        <div class="mb-3">
+          <label for="emailFuncionario" class="form-label">Email</label>
+          <input type="email" class="form-control" id="emailFuncionario" required>
+        </div>
+        <div class="mb-3">
+          <label for="cargoFuncionario" class="form-label">Cargo</label>
+          <select class="form-select" id="cargoFuncionario" required>
+            <option value="Funcionário" selected>Funcionário</option>
+            <option value="Administrador">Administrador</option>
+          </select>
+        </div>
+        <div class="d-flex justify-content-end">
+          <button type="button" class="btn btn-secondary me-2" id="btnCancelAdd">Cancelar</button>
+          <button type="submit" class="btn btn-success">Adicionar</button>
+        </div>
+      </form>
+    `;
+    popupBackdrop.style.display = 'flex';
+
+    document.getElementById('btnCancelAdd').onclick = () => popupBackdrop.style.display = 'none';
+
+    document.getElementById('formAddFuncionario').onsubmit = (e) => {
+      e.preventDefault();
+      const nome = document.getElementById('nomeFuncionario').value.trim();
+      const email = document.getElementById('emailFuncionario').value.trim();
+      const cargo = document.getElementById('cargoFuncionario').value;
+
+      if(!nome || !email) {
+        alert('Preencha todos os campos.');
+        return;
+      }
+
+      // Simula adicionar funcionário (no backend, envie via API)
+      const novoId = funcionarios.length ? Math.max(...funcionarios.map(f => f.id)) + 1 : 1;
+      funcionarios.push({
+        id: novoId,
+        nome,
+        email,
+        cargo,
+        ativo: true,
+        admin: cargo === 'Administrador'
+      });
+      filteredFuncionarios = [...funcionarios];
+      renderTable();
+      popupBackdrop.style.display = 'none';
+      alert('Funcionário adicionado com sucesso!');
+    };
+  };
+
+  // Inicialização
+  sortTable('nome'); // ordena por nome padrão
+</script>
+
+</body>
+</html>
