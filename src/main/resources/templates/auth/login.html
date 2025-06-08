@@ -110,7 +110,11 @@ document.addEventListener("DOMContentLoaded", function() {
             alertBox.classList.remove('d-none');
 
             setTimeout(() => {
-                window.location.href = '/dashboard'; // ajuste a URL
+                if (token.role === 'ADMIN') {
+                    window.location.href = '/admin/dashboard';
+                } else {
+                    window.location.href = '/user/dashboard';
+                }
             }, 1000);
         } else if (response.status === 401) {
             alertBox.className = 'alert alert-danger';

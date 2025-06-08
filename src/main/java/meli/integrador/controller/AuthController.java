@@ -19,11 +19,9 @@ public class AuthController {
     private AuthService service;
 
     @PostMapping("/login")
-    public ResponseEntity<String> authentication(@RequestBody AuthRequest login) {
-
+    public ResponseEntity<?> authentication(@RequestBody AuthRequest login) {
         return service.authenticateUser(Optional.of(login))
                 .map(response -> ResponseEntity.ok(response))
                 .orElse(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
     }
-
 }

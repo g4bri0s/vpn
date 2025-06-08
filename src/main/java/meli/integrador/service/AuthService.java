@@ -1,6 +1,7 @@
 package meli.integrador.service;
 
 import meli.integrador.dto.AuthRequest;
+import meli.integrador.dto.AuthResponse;
 import meli.integrador.middleware.JwtAuthService;
 import meli.integrador.model.User;
 import meli.integrador.repository.UserRepository;
@@ -20,14 +21,13 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
-        "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@" +
-        "(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$"
-    );
+            "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@" +
+                    "(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$");
 
     // Constructor injection
-    public AuthService(UserRepository repository, 
-                       JwtAuthService jwtService, 
-                       AuthenticationManager authenticationManager) {
+    public AuthService(UserRepository repository,
+            JwtAuthService jwtService,
+            AuthenticationManager authenticationManager) {
         this.repository = repository;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
@@ -50,27 +50,27 @@ public class AuthService {
         }
     }
 
-    public Optional<String> authenticateUser(Optional<AuthRequest> loginRequestOptional) {
+    public Optional<AuthResponse> authenticateUser(Optional<AuthRequest> loginRequestOptional) {
         if (loginRequestOptional.isEmpty()) {
-            return Optional.empty(); 
+            return Optional.empty();
         }
 
         AuthRequest loginRequest = loginRequestOptional.get();
-        validateAuthRequest(loginRequest); 
+        validateAuthRequest(loginRequest);
 
         String email = loginRequest.getEmail();
         String password = loginRequest.getPassword();
 
-        UsernamePasswordAuthenticationToken credentials =
-          new UsernamePasswordAuthenticationToken(email, password);
+        UsernamePasswordAuthenticationToken credentials = new UsernamePasswordAuthenticationToken(email, password);
 
         try {
             Authentication authentication = authenticationManager.authenticate(credentials);
             if (authentication.isAuthenticated()) {
                 Optional<User> user = repository.findByEmail(email);
                 if (user.isPresent()) {
-                    String response = generateToken(email);
-                    return Optional.of(response);
+                    String token = generateToken(email);
+                    String role = user.get().getRole().name();
+                    return Optional.of(new AuthResponse(token, role));
                 }
             }
         } catch (BadCredentialsException e) {
